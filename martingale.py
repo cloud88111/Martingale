@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 class martingale:
     
@@ -74,14 +75,20 @@ class game:
                 results += 1
             elif s[self.games] < 0 and s[self.games]!=-self.bank:
                 results2 += 1
-
         return float(results+results2)/float(self.simulations),\
         float(results)/float(self.simulations),float(results2)/float(self.simulations)
     
-m = martingale(1,7,3)
+    def chartpnl(self,result):
+        tosses = list(result.keys())
+        bank = list(result.values())
+        plt.plot(tosses, bank, '-') 
+    
+m = martingale(1,200,100)
 c = m.bustchance()
 print(c)
 
-g = game(1,7,3,simulations=100000)
+g = game(1,200,100,simulations=10000)
 t = g.montecarlo()
 print(t)
+
+g.chartpnl(g.simulate())
