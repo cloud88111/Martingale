@@ -54,16 +54,17 @@ class game:
         bank = self.bank
         tosses = {}
         for x in range(1,self.games+1):
-            heads = self.toss()
-            if heads <= self.chance:
-                bank = bank + stake*(self.odds-1)
-                stake = self.stake
-            else: 
-                bank = bank - stake
-                stake = stake*2
-            if stake > bank:
-                stake = bank
-            tosses[x] = bank - self.bank
+            if bank != 0:
+                heads = self.toss()
+                if heads < self.chance:
+                    bank = bank + stake*(self.odds-1)
+                    stake = self.stake
+                else: 
+                    bank = bank - stake
+                    stake = stake*2
+                if stake > bank:
+                    stake = bank
+                tosses[x] = bank - self.bank
         return tosses
     
     def montecarlo(self):
@@ -71,9 +72,9 @@ class game:
         results2 = 0
         for x in range(self.simulations):
             s = self.simulate()
-            if s[self.games] == -self.bank:
+            if s[len(s)] == -self.bank:
                 results += 1
-            elif s[self.games] < 0 and s[self.games]!=-self.bank:
+            elif s[len(s)] < 0 and s[len(s)]!=-self.bank:
                 results2 += 1
         return float(results+results2)/float(self.simulations),\
         float(results)/float(self.simulations),float(results2)/float(self.simulations)
@@ -83,11 +84,11 @@ class game:
         bank = list(result.values())
         plt.plot(tosses, bank, '-') 
     
-m = martingale(1,200,100)
+m = martingale(1,50,50)
 c = m.bustchance()
 print(c)
 
-g = game(1,200,100,simulations=10000)
+g = game(1,50,50,simulations=1000)
 t = g.montecarlo()
 print(t)
 
