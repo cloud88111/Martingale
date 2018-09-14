@@ -6,4 +6,4 @@ The game class is the monte carlo simulation done. This works by doubling the st
 
 The game simulation should return a higher figure both because of the reasons details above in the second paragraph and becasue the last run of games can eat into your abnk without busting you. 
 
-As an example if you start with a bank of 300 using a stake of 1, you should go "bust" after 8 consecutive loses. The likelihood is 17% of getting 8 consecutive losses. Running the simulation we get the following results; 20.3% that my final balance will be less, 17% of losing the entire balance, 3.3% of a final balance being lowere than starting but no 0.
+As an example if you start with a bank of 300 using a stake of 1, you should go "bust" after 8 consecutive loses. The likelihood is 17% of getting 8 consecutive losses. Running the simulation we get the following results; 20.3% that my final balance will be less, 17% of losing the entire balance, 3.3% of a final balance being lowere than starting but not 0.
