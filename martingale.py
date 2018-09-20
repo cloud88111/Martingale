@@ -1,6 +1,8 @@
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+import scipy, scipy.stats
 
 class martingale:
     
@@ -38,58 +40,115 @@ class martingale:
             
 class game:
 
-    def __init__(self,stake,bank,games,odds=2,chance=0.5,simulations=1):
+    def __init__(self,stake,bank,games,odds=2,chance=0.5,simulations=1,coeffs=None):
         self.stake = stake
         self.bank = bank
         self.games = games
         self.odds = odds
         self.chance = chance
         self.simulations = simulations
+        self.coeffs = coeffs
         
     def toss(self):
         return random.random()
     
-    def simulate(self):
+    def simulate(self,games=None,count=False):
         stake = self.stake
         bank = self.bank
         tosses = {}
-        for x in range(1,self.games+1):
-            if bank != 0:
+        headcount = 0
+        if games == None:
+            games = self.games
+        if count == False:
+            for x in range(1,games+1):
+                if bank != 0:
+                    heads = self.toss()
+                    if heads < self.chance:
+                        bank = bank + stake*(self.odds-1)
+                        stake = self.stake
+                    else: 
+                        bank = bank - stake
+                        stake = stake*2
+                    if stake > bank:
+                        stake = bank
+                    tosses[x] = bank - self.bank
+            return tosses
+        else: 
+            for x in range(1,games+1):
                 heads = self.toss()
                 if heads < self.chance:
-                    bank = bank + stake*(self.odds-1)
-                    stake = self.stake
-                else: 
-                    bank = bank - stake
-                    stake = stake*2
-                if stake > bank:
-                    stake = bank
-                tosses[x] = bank - self.bank
-        return tosses
+                    headcount += 1
+            return headcount
     
-    def montecarlo(self):
+    def montecarlo(self,games=None,count=False):
         results = 0
         results2 = 0
-        for x in range(self.simulations):
-            s = self.simulate()
-            if s[len(s)] == -self.bank:
-                results += 1
-            elif s[len(s)] < 0 and s[len(s)]!=-self.bank:
-                results2 += 1
-        return float(results+results2)/float(self.simulations),\
-        float(results)/float(self.simulations),float(results2)/float(self.simulations)
-    
+        profit = 0
+        if count == False:
+            for x in range(self.simulations):
+                if games == None:
+                    s = self.simulate()
+                else: s = self.simulate(games)
+                if s[len(s)] == -self.bank:
+                    results += 1
+                elif s[len(s)] < 0 and s[len(s)]!=-self.bank:
+                    results2 += 1
+                profit += s[len(s)]
+            return float(results+results2)/float(self.simulations),\
+            float(results)/float(self.simulations),float(results2)/float(self.simulations),\
+            float(profit)/float(self.simulations)
+        else:
+            heads = []
+            for x in range(self.simulations):
+                heads.append(self.simulate(count=True))
+            return heads
+                
     def chartpnl(self,result):
         tosses = list(result.keys())
         bank = list(result.values())
         plt.plot(tosses, bank, '-') 
+        
+    def getmean(self):
+        return self.simulations * self.chance
     
-m = martingale(1,50,50)
-c = m.bustchance()
-print(c)
+    def getstd(self):
+        return math.sqrt(self.simulations * self.chance * (1 - self.chance))
+    
+    def plotdist(self):
+        result = self.counter(self.montecarlo(count=True))
+        k = np.arange(0.75*self.chance*self.games,1.25*self.chance*self.games)
+        norm = scipy.stats.binom.pmf(k,self.games,self.chance)*self.simulations
+        result = sorted(result.items())
+        x,y = zip(*result)
+        plt.plot(k,norm,'-')
+        plt.plot(x,y,'o')
+        plt.show()
+    
+    def plotexpected(self):
+        chance = {}
+        for x in self.coeffs:
+            self.simulations = x
+            a,b,c,p = self.montecarlo(games=x)
+            chance[x] = b
+        return chance
+    
+    def counter(self,list1):
+        my_dict = {}
+        for x in list(set(list1)):
+            my_dict[x] = len([elem for elem in list1 if elem == x])
+        my_dict = my_dict
+        return my_dict
 
-g = game(1,50,50,simulations=1000)
+coeffs = list(range(10,2010,10))
+
+for x in coeffs:
+    m = martingale(1,500,x)
+    c = m.bustchance()
+    print(c)
+
+g = game(1,500,1000,simulations=1000,coeffs=coeffs)
+g.plotdist()
 t = g.montecarlo()
 print(t)
-
-g.chartpnl(g.simulate())
+d = g.plotexpected()
+g.chartpnl(g.plotexpected())
